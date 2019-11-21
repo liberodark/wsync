@@ -1,7 +1,5 @@
-#[macro_use]
-extern crate clap;
-
 use std::fs;
+use std::path;
 
 fn main() {
     let matches = clap::App::new("wsync")
@@ -39,4 +37,23 @@ fn main() {
                 .default_value("."),
         )
         .get_matches();
+
+    let out_dir = path::Path::new(matches.value_of("out").unwrap());
+    let client = reqwest::Client::new();
+    let mut res = client
+        // https://shibboleth-mirror.cdi.ti.ja.net/CentOS_7/
+        .get(matches.value_of("INPUT").unwrap())
+        .send()
+        .unwrap();
+
+    let content_type = res.headers().get("Content-Type").unwrap().to_str().unwrap();
+    let is_dir = regex::Regex::new("text/html")
+        .unwrap()
+        .is_match(content_type);
+    let body = res.text().unwrap();
+    if !out_dir.exists() {
+        fs::create_dir_all(out_dir).unwrap();
+    }
+
+    fs::write(out_dir.join("index.html"), body).unwrap();
 }
