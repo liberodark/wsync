@@ -1,1 +1,5 @@
 # wsync
+
+Compile :
+
+`cargo build`
